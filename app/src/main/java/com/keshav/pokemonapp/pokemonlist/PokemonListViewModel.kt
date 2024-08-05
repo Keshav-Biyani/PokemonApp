@@ -1,5 +1,6 @@
 package com.keshav.pokemonapp.pokemonlist
 
+import android.util.Log
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
@@ -17,12 +18,16 @@ class PokemonListViewModel :ViewModel() {
     var pokemonList = mutableStateOf<List<PokemonListData>>(listOf())
     var isEndReached = mutableStateOf(false)
     var isLoading = mutableStateOf(false)
-    var endReached= mutableStateOf(false)
-    var errorMessage: String by mutableStateOf("")
-    fun getPokemonList(phoneNumber : String) {
+    private var endReached= mutableStateOf(false)
+    var errorMessage = mutableStateOf("")
+    init {
+        getPokemonList()
+    }
+    fun getPokemonList() {
         isLoading.value = true
         viewModelScope.launch {
             val response = RetrofitInstance.apiService.getPokemonList(PAGE_SIZE,currentPage* PAGE_SIZE)
+            Log.e("ERRROR",response.toString())
 
             try {
                 if(response.isSuccessful){
@@ -49,7 +54,8 @@ class PokemonListViewModel :ViewModel() {
             }
             catch (e: Exception) {
                 isLoading.value= false
-                errorMessage = e.message.toString()
+                errorMessage.value = e.message.toString()
+                Log.e("EORRr",errorMessage.toString())
             }
         }
     }

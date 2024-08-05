@@ -1,5 +1,6 @@
 package com.keshav.pokemonapp.pokemonlist
 
+import android.util.Log
 import androidx.compose.ui.tooling.preview.Preview
 
 import androidx.compose.foundation.Image
@@ -70,11 +71,6 @@ import coil.compose.SubcomposeAsyncImage
 import coil.decode.SvgDecoder
 import coil.request.CachePolicy
 import coil.request.ImageRequest
-import com.ibm.pokemonapp.R
-import com.ibm.pokemonapp.data.models.PokemonListEntry
-import com.ibm.pokemonapp.presentation.ui.theme.Red
-import com.ibm.pokemonapp.presentation.ui.theme.Roboto
-import com.ibm.pokemonapp.presentation.ui.theme.RobotoCondensed
 import com.keshav.pokemonapp.R
 import com.keshav.pokemonapp.models.PokemonListData
 
@@ -82,6 +78,7 @@ import com.keshav.pokemonapp.models.PokemonListData
 @Composable
 fun PokemonListScreen(navController: NavController){
     val screenHeight = LocalConfiguration.current.screenHeightDp.dp
+    val viewModel : PokemonListViewModel = PokemonListViewModel()
     Surface(
         color = MaterialTheme.colorScheme.primary,
         modifier = Modifier.fillMaxSize()
@@ -98,7 +95,7 @@ fun PokemonListScreen(navController: NavController){
 
 
             // Grid Section
-            PokemonList(navController, screenHeight)
+            PokemonList(navController, screenHeight,viewModel)
         }
 
     }
@@ -146,7 +143,7 @@ fun PokemonList(
     val pokemonList by remember { viewModel.pokemonList }
     val isEndReached by remember { viewModel.isEndReached }
     val isLoading by remember { viewModel.isLoading }
-    val workflowError by remember { viewModel.workflowError }
+    val workflowError by remember { viewModel.errorMessage }
 
     Box(
         modifier = Modifier
@@ -154,6 +151,7 @@ fun PokemonList(
         contentAlignment = Alignment.TopCenter,
     ) {
         // Display the Pokemon entries
+        Log.e("Size",pokemonList.size.toString())
         LazyVerticalGrid(
             modifier = Modifier.height(screenHeight),
             columns = GridCells.Fixed(2),
@@ -164,7 +162,9 @@ fun PokemonList(
             items(pokemonList.size) { index ->
                 PokemonEntryCard(
                     entry = pokemonList[index],
-                    navController = navController
+                    navController = navController,
+                    modifier = Modifier,
+                    viewModel
                 )
                 if (index >= pokemonList.size - 1 && !isEndReached && !isLoading) {
                     viewModel.getPokemonList()
@@ -182,9 +182,9 @@ fun PokemonList(
         }
 
         // Retry option
-        if (workflowError.message.isNotEmpty()) {
+        if (workflowError.isNotEmpty()) {
             Retry(
-                error = workflowError.message,
+                error = workflowError,
                 onRetry = { viewModel.getPokemonList() },
             )
         }
@@ -243,9 +243,10 @@ fun PokemonEntryCard(
                 },
                 onSuccess = { success ->
                     val drawable = success.result.drawable
-                    viewModel.generatePokemonColor(drawable) { color ->
-                        pokemonColor = color
-                    }
+
+//                    viewModel.generatePokemonColor(drawable) { color ->
+//                        pokemonColor = color
+//                    }
                 }
             )
             Row(
