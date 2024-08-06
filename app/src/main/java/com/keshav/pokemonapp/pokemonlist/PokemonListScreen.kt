@@ -1,8 +1,11 @@
 package com.keshav.pokemonapp.pokemonlist
 
+import android.content.Intent
+import android.provider.Settings
 import android.util.Log
+import androidx.activity.ComponentActivity
 import androidx.compose.ui.tooling.preview.Preview
-
+import androidx.compose.material.icons.Icons
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -26,9 +29,11 @@ import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowForward
 import androidx.compose.material.icons.filled.Search
+import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material3.Icon
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
@@ -36,8 +41,10 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -50,7 +57,10 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.focus.onFocusChanged
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Color.Companion.Black
 import androidx.compose.ui.graphics.Color.Companion.Red
+import androidx.compose.ui.graphics.Color.Companion.White
 import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
@@ -71,14 +81,31 @@ import coil.compose.SubcomposeAsyncImage
 import coil.decode.SvgDecoder
 import coil.request.CachePolicy
 import coil.request.ImageRequest
+import com.google.accompanist.systemuicontroller.rememberSystemUiController
 import com.keshav.pokemonapp.R
+import com.keshav.pokemonapp.Utils.ConnectionManager
+import com.keshav.pokemonapp.Utils.getDominantColor
 import com.keshav.pokemonapp.models.PokemonListData
 
 
 @Composable
 fun PokemonListScreen(navController: NavController){
     val screenHeight = LocalConfiguration.current.screenHeightDp.dp
-    val viewModel : PokemonListViewModel = PokemonListViewModel()
+    var isNetwork by remember {
+        mutableStateOf(false)
+    }
+    val systemUiController = rememberSystemUiController()
+    val context = LocalContext.current
+
+    systemUiController.setStatusBarColor ( Color(0xFF2C3251))
+    isNetwork = if (ConnectionManager().checkConectivity(context)) {
+        //  Toast.makeText(context, "Condition is true", Toast.LENGTH_SHORT).show()
+        false
+    } else {
+        // Toast.makeText(context, "Please Connect to network for better result", Toast.LENGTH_SHORT).show()
+        true
+    }
+
     Surface(
         color = MaterialTheme.colorScheme.primary,
         modifier = Modifier.fillMaxSize()
@@ -92,13 +119,22 @@ fun PokemonListScreen(navController: NavController){
                 textModifier = Modifier.align(Alignment.Start)
             )
 
-
-
-            // Grid Section
-            PokemonList(navController, screenHeight,viewModel)
+            if (!isNetwork) {
+                val viewModel : PokemonListViewModel = PokemonListViewModel()
+                // Grid Section
+                PokemonList(navController, screenHeight, viewModel)
+                Log.e("Pokemon","Poke")
+            }
+            else{
+AlertDialogExample {
+isNetwork = false
+}
+            }
         }
 
     }
+
+
 }
 
 
@@ -111,14 +147,15 @@ private fun TopBar(imageModifier: Modifier, textModifier: Modifier) {
         contentDescription = "Pokemon logo",
         modifier = imageModifier
             .fillMaxWidth()
+            .padding(10.dp)
     )
     Text(
         text = buildAnnotatedString {
-            withStyle(style = SpanStyle(fontWeight = FontWeight.Bold)) {
+            withStyle(style = SpanStyle(fontWeight = FontWeight.SemiBold)) {
                 append(stringResource(R.string.welcome_title))
             }
             append("\n")
-            withStyle(style = SpanStyle(fontWeight = FontWeight.Bold)) {
+            withStyle(style = SpanStyle(fontWeight = FontWeight.SemiBold)) {
                 append(stringResource(R.string.welcome_title_))
             }
         },
@@ -138,12 +175,13 @@ private fun TopBar(imageModifier: Modifier, textModifier: Modifier) {
 fun PokemonList(
     navController: NavController,
     screenHeight: Dp,
-    viewModel: PokemonListViewModel
+    viewModel: PokemonListViewModel= PokemonListViewModel()
 ) {
     val pokemonList by remember { viewModel.pokemonList }
     val isEndReached by remember { viewModel.isEndReached }
     val isLoading by remember { viewModel.isLoading }
     val workflowError by remember { viewModel.errorMessage }
+Log.e("Size",pokemonList.size.toString())
 
     Box(
         modifier = Modifier
@@ -151,7 +189,7 @@ fun PokemonList(
         contentAlignment = Alignment.TopCenter,
     ) {
         // Display the Pokemon entries
-        Log.e("Size",pokemonList.size.toString())
+        Log.e("",pokemonList.size.toString())
         LazyVerticalGrid(
             modifier = Modifier.height(screenHeight),
             columns = GridCells.Fixed(2),
@@ -168,6 +206,8 @@ fun PokemonList(
                 )
                 if (index >= pokemonList.size - 1 && !isEndReached && !isLoading) {
                     viewModel.getPokemonList()
+
+                    Log.e("RUNNNN","RUNNN")
                 }
             }
         }
@@ -213,7 +253,7 @@ fun PokemonEntryCard(
             .background(pokemonColor)
             .clickable {
                 navController.navigate(
-                    "pokemon_details_screen/${pokemonColor.toArgb()}/${entry.pokemonName}"
+                    "pokemon_info_screen/${entry.pokemonId}"
                 )
             }
     ) {
@@ -243,6 +283,7 @@ fun PokemonEntryCard(
                 },
                 onSuccess = { success ->
                     val drawable = success.result.drawable
+                   pokemonColor = Color( getDominantColor(success.result))
 
 //                    viewModel.generatePokemonColor(drawable) { color ->
 //                        pokemonColor = color
@@ -293,4 +334,47 @@ fun Retry(
             )
         }
     }
+}
+@Composable
+fun AlertDialogExample(
+    onDismissRequest: () -> Unit,
+    //onConfirmation: () -> Unit
+) {
+    val context = LocalContext.current
+    AlertDialog(
+        icon = {
+            Icon(Icons.Default.Settings, contentDescription = "Example Icon", tint = Color(0xFF353D64))
+        },
+        title = {
+            Text(text = "No Internet",color = Black)
+        },
+        text = {
+            Text(text = "Network connectivity is necessary for the app", color = Color.Black)
+        },
+        onDismissRequest = {
+            //onDismissRequest()
+           (context as? ComponentActivity)?.finish()
+        },
+        confirmButton = {
+            TextButton(
+                onClick = {
+                    //    onConfirmation()
+                    val intent = Intent(Settings.ACTION_WIRELESS_SETTINGS)
+                    context.startActivity(intent)
+                }
+            ) {
+                Text("Settings", color =Color(0xFF353D64))
+            }
+        },
+        dismissButton = {
+            TextButton(
+                onClick = {
+                    onDismissRequest()
+                }
+            ) {
+                Text("Dismiss App",color =Color(0xFF353D64))
+            }
+        },
+        containerColor = White
+    )
 }

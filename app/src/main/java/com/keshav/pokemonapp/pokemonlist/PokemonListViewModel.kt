@@ -31,23 +31,22 @@ class PokemonListViewModel :ViewModel() {
 
             try {
                 if(response.isSuccessful){
-                    endReached.value = currentPage * PAGE_SIZE >=response.body()!!.count
-                    val pokemonEntries = response.body()!!.results.mapIndexed { index, entry ->
+                    endReached.value = currentPage * PAGE_SIZE >= response.body()!!.count
+                    val pokedexEntries = response.body()!!.results.mapIndexed { index, entry ->
                         val number = if(entry.url.endsWith("/")) {
                             entry.url.dropLast(1).takeLastWhile { it.isDigit() }
                         } else {
                             entry.url.takeLastWhile { it.isDigit() }
                         }
                         val url = "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${number}.png"
-                        PokemonListData(entry.name.replaceFirstChar {
-                            if (it.isLowerCase()) it.titlecase(
-                                Locale.ROOT
-                            ) else it.toString()
-                        }, url, number.toInt())
+                        PokemonListData(entry.name.capitalize(Locale.ROOT), url, number.toInt())
                     }
                     currentPage++
+
+                    errorMessage.value = ""
                     isLoading.value = false
-                    pokemonList.value += pokemonEntries
+                    pokemonList.value += pokedexEntries
+
                 }
 
 
@@ -57,6 +56,7 @@ class PokemonListViewModel :ViewModel() {
                 errorMessage.value = e.message.toString()
                 Log.e("EORRr",errorMessage.toString())
             }
+
         }
     }
 }

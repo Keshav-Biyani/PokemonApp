@@ -12,6 +12,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.navigation.compose.rememberNavController
+import com.keshav.pokemonapp.navigation.AppNavigation
 import com.keshav.pokemonapp.pokemonlist.PokemonListScreen
 import com.keshav.pokemonapp.ui.theme.PokemonAppTheme
 
@@ -21,8 +22,7 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
         setContent {
             PokemonAppTheme {
-                val navController  = rememberNavController()
-                PokemonListScreen(navController )
+               AppNavigation()
 //                Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
 //                    Greeting(
 //                        name = "Android",

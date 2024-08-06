@@ -5,8 +5,8 @@
 
 
     <string name="search_hint">Search…</string>
-    <string name="welcome_title">What Are You</string>
-    <string name="welcome_title_">Looking For?</string>
+    <string name="welcome_title">Become a Pokémon master </string>
+    <string name="welcome_title_">and explore!</string>
     <string name="retry">Retry</string>
 
 
@@ -28,6 +28,7 @@
     <string name="unexpected_during_retrieval_details">Unexpected error during Pokémon details retrieval</string>
 
     <string name="error_occurred">"An error occurred"</string>
+    <string name="accept">accept</string>
 
 
 </resources>
