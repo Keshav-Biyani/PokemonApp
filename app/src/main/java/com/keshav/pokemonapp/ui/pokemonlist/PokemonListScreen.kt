@@ -1,10 +1,10 @@
-package com.keshav.pokemonapp.pokemonlist
+package com.keshav.pokemonapp.ui.pokemonlist
 
 import android.content.Intent
+import android.content.res.Configuration
 import android.provider.Settings
 import android.util.Log
 import androidx.activity.ComponentActivity
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.material.icons.Icons
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -25,53 +25,43 @@ import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.text.BasicTextField
-import androidx.compose.foundation.text.KeyboardActions
-import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.automirrored.filled.ArrowForward
 import androidx.compose.material.icons.filled.ArrowForward
-import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.Icon
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Alignment.Companion.Center
 import androidx.compose.ui.Alignment.Companion.CenterHorizontally
-import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.draw.shadow
-import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Color.Companion.Black
 import androidx.compose.ui.graphics.Color.Companion.Red
 import androidx.compose.ui.graphics.Color.Companion.White
-import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.SpanStyle
-import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
@@ -126,9 +116,9 @@ fun PokemonListScreen(navController: NavController){
                 Log.e("Pokemon","Poke")
             }
             else{
-AlertDialogExample {
-isNetwork = false
-}
+                AlertDialogExample {
+                    isNetwork = false
+                }
             }
         }
 
@@ -175,13 +165,22 @@ private fun TopBar(imageModifier: Modifier, textModifier: Modifier) {
 fun PokemonList(
     navController: NavController,
     screenHeight: Dp,
-    viewModel: PokemonListViewModel= PokemonListViewModel()
+    viewModel: PokemonListViewModel
 ) {
-    val pokemonList by remember { viewModel.pokemonList }
-    val isEndReached by remember { viewModel.isEndReached }
-    val isLoading by remember { viewModel.isLoading }
-    val workflowError by remember { viewModel.errorMessage }
-Log.e("Size",pokemonList.size.toString())
+    // Collect StateFlow as State using collectAsState
+    val pokemonList by viewModel.pokemonList.collectAsState()
+    val isEndReached by viewModel.isEndReached.collectAsState()
+    val isLoading by viewModel.isLoading.collectAsState()
+    val workflowError by viewModel.errorMessage.collectAsState()
+
+    Log.e("Size DONE", pokemonList.toString())
+
+    // Determine orientation
+    val configuration = LocalConfiguration.current
+    val isLandscape = configuration.orientation == Configuration.ORIENTATION_LANDSCAPE
+
+    // Set columns based on orientation
+    val columns = if (isLandscape) 3 else 2
 
     Box(
         modifier = Modifier
@@ -189,10 +188,10 @@ Log.e("Size",pokemonList.size.toString())
         contentAlignment = Alignment.TopCenter,
     ) {
         // Display the Pokemon entries
-        Log.e("",pokemonList.size.toString())
+        Log.e("", pokemonList.size.toString())
         LazyVerticalGrid(
             modifier = Modifier.height(screenHeight),
-            columns = GridCells.Fixed(2),
+            columns = GridCells.Fixed(columns),
             contentPadding = PaddingValues(horizontal = 16.dp, vertical = 0.dp),
             horizontalArrangement = Arrangement.spacedBy(16.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp),
@@ -201,13 +200,14 @@ Log.e("Size",pokemonList.size.toString())
                 PokemonEntryCard(
                     entry = pokemonList[index],
                     navController = navController,
-                    modifier = Modifier,
-                    viewModel
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .aspectRatio(if (isLandscape) 1.5f else 1f) // Adjust aspect ratio for landscape
                 )
                 if (index >= pokemonList.size - 1 && !isEndReached && !isLoading) {
                     viewModel.getPokemonList()
 
-                    Log.e("RUNNNN","RUNNN")
+                    Log.e("RUNNNN", "RUNNN")
                 }
             }
         }
@@ -216,8 +216,7 @@ Log.e("Size",pokemonList.size.toString())
         if (isLoading) {
             CircularProgressIndicator(
                 color = MaterialTheme.colorScheme.secondary,
-                modifier = Modifier
-                    .align(Center)
+                modifier = Modifier.align(Alignment.Center)
             )
         }
 
@@ -236,14 +235,18 @@ Log.e("Size",pokemonList.size.toString())
 fun PokemonEntryCard(
     entry: PokemonListData,
     navController: NavController,
-    modifier: Modifier = Modifier,
-    viewModel: PokemonListViewModel
+    modifier: Modifier = Modifier
 ) {
     val defaultPokemonColor = MaterialTheme.colorScheme.tertiary
     var pokemonColor by remember {
         mutableStateOf(defaultPokemonColor)
     }
-
+    val configuration = LocalConfiguration.current
+    val imageSize = if (configuration.orientation == Configuration.ORIENTATION_LANDSCAPE) {
+        140.dp // Larger size for landscape
+    } else {
+        120.dp // Default size for portrait
+    }
     Box(
         contentAlignment = Center,
         modifier = modifier
@@ -272,7 +275,7 @@ fun PokemonEntryCard(
             SubcomposeAsyncImage(
                 model = imageRequest,
                 modifier = Modifier
-                    .size(120.dp)
+                    .size(imageSize)
                     .align(CenterHorizontally),
                 contentDescription = entry.pokemonName,
                 loading = {
@@ -282,12 +285,9 @@ fun PokemonEntryCard(
                     )
                 },
                 onSuccess = { success ->
-                    val drawable = success.result.drawable
                    pokemonColor = Color( getDominantColor(success.result))
 
-//                    viewModel.generatePokemonColor(drawable) { color ->
-//                        pokemonColor = color
-//                    }
+
                 }
             )
             Row(
@@ -304,7 +304,7 @@ fun PokemonEntryCard(
                     modifier = Modifier.weight(1f),
                 )
                 Icon(
-                    imageVector = Icons.Default.ArrowForward,
+                    imageVector = Icons.AutoMirrored.Filled.ArrowForward,
                     contentDescription = "Forward",
                     tint = MaterialTheme.colorScheme.primary,
                 )

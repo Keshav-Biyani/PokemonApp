@@ -1,4 +1,4 @@
-package com.keshav.pokemonapp.pokemonInfo.tabs.stats
+package com.keshav.pokemonapp.ui.pokemonInfo.tabs.stats
 
 
 import androidx.compose.animation.core.Animatable

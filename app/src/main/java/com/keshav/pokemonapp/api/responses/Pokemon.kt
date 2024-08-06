@@ -22,3 +22,8 @@ data class Pokemon(
     val types: List<Type>,
     val weight: Int
 )
+fun Pokemon.getFormattedId() = when {
+    id < 10 -> "#00$id"
+    id < 100 -> "#0$id"
+    else -> "#$id"
+}

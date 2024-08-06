@@ -1,4 +1,4 @@
-package com.keshav.pokemonapp.pokemonInfo
+package com.keshav.pokemonapp.ui.pokemonInfo
 
 import android.util.Log
 import androidx.lifecycle.ViewModel

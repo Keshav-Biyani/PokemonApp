@@ -7,8 +7,8 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
-import com.keshav.pokemonapp.pokemonInfo.PokemonInfoScreen
-import com.keshav.pokemonapp.pokemonlist.PokemonListScreen
+import com.keshav.pokemonapp.ui.pokemonInfo.PokemonInfoScreen
+import com.keshav.pokemonapp.ui.pokemonlist.PokemonListScreen
 
 
 @Composable

@@ -1,4 +1,4 @@
-package com.keshav.pokemonapp.pokemonInfo.components
+package com.keshav.pokemonapp.ui.pokemonInfo.components
 
 
 

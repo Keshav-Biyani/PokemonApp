@@ -1,4 +1,4 @@
-package com.keshav.pokemonapp.pokemonInfo.tabs.about
+package com.keshav.pokemonapp.ui.pokemonInfo.tabs.about
 //
 //import androidx.lifecycle.ViewModel
 //import androidx.lifecycle.viewModelScope
